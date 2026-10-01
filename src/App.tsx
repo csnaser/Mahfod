@@ -96,6 +96,9 @@ export interface LostItem {
   taskStatus?: 'بانتظار التوجه الميداني' | 'تم الحفظ بالأمانات';
   studentPhone?: string;
   exactLocation?: string;
+  ownershipType?: 'personal' | 'volunteer';
+  isVolunteerContribution?: boolean;
+  photoUrl?: string;
 }
 
 const INITIAL_ITEMS: LostItem[] = [
@@ -482,14 +485,14 @@ export default function App() {
     return agentTickets;
   }, [agentTickets, agentTicketsFilter]);
 
-  // Volunteer hours calculation: Volunteer contributions (+2 hours upon delivery to owner), personal lost items = 0 hours
+  // Volunteer hours calculation: Each delivered item reported by the student awards +2 volunteer hours!
   const myItemsList = useMemo(() => {
     return items.filter(i => i.reportedByStudent);
   }, [items]);
 
   const volunteerHours = useMemo(() => {
     const deliveredCount = myItemsList.filter(
-      i => i.status === 'تم التسليم' && (!i.description.includes('[مفقود شخصي') || i.description.includes('[مساهمة تطوعية]'))
+      i => i.status === 'تم التسليم' && i.isVolunteerContribution !== false
     ).length;
     return deliveredCount * 2;
   }, [myItemsList]);
@@ -712,37 +715,6 @@ export default function App() {
     }
   };
 
-  // Student Profile & Login Gate States
-  const [studentName, setStudentName] = useState<string>('ناصر الدوسري');
-  const [studentId, setStudentId] = useState<string>('442109876');
-  const [isStudentLoginModalOpen, setIsStudentLoginModalOpen] = useState<boolean>(false);
-  const [loginStudentIdInput, setLoginStudentIdInput] = useState<string>('442109876');
-  const [loginPasswordInput, setLoginPasswordInput] = useState<string>('••••••••');
-
-  // New item form state (Ownership selection & Camera support)
-  const [ownershipType, setOwnershipType] = useState<'personal' | 'contribution'>('personal');
-  const [capturedImage, setCapturedImage] = useState<string | null>(null);
-
-  const handleImageCapture = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (file) {
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        setCapturedImage(reader.result as string);
-      };
-      reader.readAsDataURL(file);
-    }
-  };
-
-  const handleStudentLoginSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    const idVal = loginStudentIdInput.trim() || '442109876';
-    setStudentId(idVal);
-    setStudentName('ناصر الدوسري');
-    setIsStudentLoginModalOpen(false);
-    handleLogin('student');
-  };
-
   // New item form state
   const [newItemName, setNewItemName] = useState<string>('');
   const [newItemCategory, setNewItemCategory] = useState<'electronics' | 'documents' | 'belongings' | 'keys' | 'tools'>('electronics');
@@ -751,6 +723,38 @@ export default function App() {
   const [newItemDescription, setNewItemDescription] = useState<string>('');
   const [newItemCustodian, setNewItemCustodian] = useState<string>('أ. فهد الرويس');
   const [newItemExt, setNewItemExt] = useState<string>('تحويلة: 4110 - مكتب 104');
+  const [newOwnershipType, setNewOwnershipType] = useState<'personal' | 'volunteer'>('personal');
+  const [newItemPhoto, setNewItemPhoto] = useState<string | null>(null);
+  const photoInputRef = React.useRef<HTMLInputElement | null>(null);
+
+  // Student Profile & CRT Login State
+  const [studentName, setStudentName] = useState<string>('ناصر الدوسري');
+  const [studentId, setStudentId] = useState<string>('442108542');
+  const [isStudentLoginOpen, setIsStudentLoginOpen] = useState<boolean>(false);
+  const [loginStudentIdInput, setLoginStudentIdInput] = useState<string>('442108542');
+  const [loginPasswordInput, setLoginPasswordInput] = useState<string>('');
+
+  const handlePhotoUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onloadend = () => {
+      setNewItemPhoto(reader.result as string);
+    };
+    reader.readAsDataURL(file);
+  };
+
+  const handleStudentLoginSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    setStudentName('ناصر الدوسري');
+    if (loginStudentIdInput.trim()) {
+      setStudentId(loginStudentIdInput.trim());
+    } else {
+      setStudentId('442108542');
+    }
+    setIsStudentLoginOpen(false);
+    handleLogin('student');
+  };
 
   // Handle Login Gate selection
   const handleLogin = (role: 'student' | 'staff') => {
@@ -769,9 +773,6 @@ export default function App() {
     setActiveModalItem(null);
     setIsRegisterOpen(false);
     setIsAssistantOpen(false);
-    setIsStudentLoginModalOpen(false);
-    setOwnershipType('personal');
-    setCapturedImage(null);
   };
 
   const handleAssistantItemCreated = (newItem: LostItem) => {
@@ -872,8 +873,8 @@ export default function App() {
       return;
     }
 
-    if (ownershipType === 'contribution' && !capturedImage) {
-      alert('يرجى تصوير المعثور أو رفع صورة لتوثيق المساهمة التطوعية واحتساب الساعات.');
+    if (newOwnershipType === 'volunteer' && !newItemPhoto) {
+      alert('يرجى تصوير المعثور أو رفع صورة لتوثيق المساهمة التطوعية.');
       return;
     }
 
@@ -891,11 +892,10 @@ export default function App() {
     const custodianOffice = officer.custodianOffice;
     const custodianName = officer.custodianName;
     const contactExt = officer.contactExt;
-
-    const ownershipPrefix = ownershipType === 'personal'
-      ? `[مفقود شخصي للطالب: ${studentName}]`
-      : `[مساهمة تطوعية من الطالب: ${studentName}]`;
-    const description = `${ownershipPrefix} ${newItemDescription.trim() || 'معثور تم توثيقه لدى أمانات الكلية بانتظار تسليمه لصاحبه.'}`;
+    const baseDesc = newItemDescription.trim() || 'معثور جديد تم إيداعه لدى أمانات الكلية بانتظار استلام صاحبه.';
+    const description = newOwnershipType === 'volunteer' 
+      ? `[مساهمة تطوعية] ${baseDesc}` 
+      : `[مفقود شخصي] ${baseDesc}`;
 
     // Predefined 8-step Deterministic Round-Robin sequence for added items:
     // 1: watch, 2: tote, 3: wallet, 4: keys, 5: airpods, 6: laptop, 7: notebook, 8: calculator
@@ -959,11 +959,14 @@ export default function App() {
         description: description,
         vectorType: vectorType,
         svg: itemSvg,
-        image: capturedImage || '',
+        image: newItemPhoto || '',
+        photoUrl: newItemPhoto || undefined,
         custodianOffice: custodianOffice,
         custodianName: custodianName,
         contactExt: contactExt,
-        reportedByStudent: userRole === 'student'
+        reportedByStudent: userRole === 'student',
+        ownershipType: newOwnershipType,
+        isVolunteerContribution: newOwnershipType === 'volunteer'
       };
 
       setItems((prev) => [newCreatedItem, ...prev]);
@@ -971,9 +974,13 @@ export default function App() {
       setNewItemName('');
       setNewItemLocation('');
       setNewItemDescription('');
-      setOwnershipType('personal');
-      setCapturedImage(null);
-      showToast(`تم تسجيل المعثور بنجاح برقم مرجعي [${newCreatedItem.refNumber}] وهو الآن في الحفظ والصون.`);
+      setNewItemPhoto(null);
+      setNewOwnershipType('personal');
+      showToast(
+        newOwnershipType === 'volunteer'
+          ? `تم توثيق مساهمتك التطوعية برقم [${newCreatedItem.refNumber}] بنجاح، وستُحتسب ساعاتها فور التسليم.`
+          : `تم تسجيل بلاغ مفقودك الشخصي برقم [${newCreatedItem.refNumber}] وهو الآن في الحفظ والصون.`
+      );
     } catch (err: any) {
       console.error('Insert exception:', err);
       alert('حدث خطأ غير متوقع أثناء الحفظ.');
@@ -1055,7 +1062,7 @@ export default function App() {
                   </div>
 
                   {/* Central Login Content directly on CRT Glass */}
-                  <div className="flex flex-col items-center text-center my-auto z-20 py-3 sm:py-6 crt-content-warmup">
+                  <div className="flex flex-col items-center text-center my-auto z-20 py-2 sm:py-3 crt-content-warmup">
                     {/* Word "مَحْفُوظ" with Amiri bold and distinct dot of 'ظ' */}
                     <h1 className="text-4xl sm:text-5xl md:text-6xl font-bold text-[#3d2719] mb-1 font-amiri tracking-tight">
                       مَحْفُوظ
@@ -1074,7 +1081,7 @@ export default function App() {
                     <div className="w-full max-w-sm flex flex-col sm:flex-row gap-2.5 sm:gap-3">
                       <button
                         type="button"
-                        onClick={() => setIsStudentLoginModalOpen(true)}
+                        onClick={() => setIsStudentLoginOpen(true)}
                         className="flex-1 bevel-btn py-2.5 sm:py-3 px-3 sm:px-4 rounded font-bold text-xs sm:text-sm flex items-center justify-center gap-2 cursor-pointer"
                       >
                         <UserCheck className="w-4 h-4 text-[#5a3e2b]" />
@@ -1151,82 +1158,76 @@ export default function App() {
             </div>
           </div>
 
-          {/* Student Login Modal (CRT Vintage Style) */}
-          {isStudentLoginModalOpen && (
+          {/* Student Login Modal (Accepts any test input, saves 'ناصر الدوسري' and student ID) */}
+          {isStudentLoginOpen && (
             <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-black/60 backdrop-blur-xs">
-              <div className="w-full max-w-md bg-gradient-to-b from-[#2e2017] via-[#3a291e] to-[#1c130d] p-3 sm:p-5 rounded-2xl border-4 border-[#170e08] shadow-2xl relative animate-in fade-in zoom-in-95 duration-200">
-                {/* CRT Tube Frame */}
-                <div className="bg-[#130d09] p-3 rounded-xl border-2 border-[#251a13] shadow-inner relative overflow-hidden">
-                  <div className="crt-glass rounded-lg border-2 border-[#4d3a2c] p-4 text-right relative overflow-hidden">
-                    <div className="absolute inset-0 scanlines-subtle pointer-events-none opacity-40" />
-
-                    {/* Modal Title */}
-                    <div className="flex items-center justify-between border-b border-[#a8988a]/40 pb-2 mb-3 z-10 relative">
-                      <div className="flex items-center gap-1.5 text-xs font-bold text-[#5a3e2b]">
-                        <UserCheck className="w-4 h-4 text-[#5a3e2b]" />
-                        <span>تسجيل دخول الطالب — بوابة مَحْفُوظ</span>
-                      </div>
-                      <button
-                        type="button"
-                        onClick={() => setIsStudentLoginModalOpen(false)}
-                        className="bevel-btn p-1 rounded text-[#5a3e2b] cursor-pointer"
-                      >
-                        <X className="w-3.5 h-3.5" />
-                      </button>
-                    </div>
-
-                    <form onSubmit={handleStudentLoginSubmit} className="space-y-3 z-10 relative">
-                      <div>
-                        <label className="block text-xs font-bold text-[#3d2719] mb-1">
-                          الرقم الجامعي *
-                        </label>
-                        <input
-                          type="text"
-                          required
-                          value={loginStudentIdInput}
-                          onChange={(e) => setLoginStudentIdInput(e.target.value)}
-                          placeholder="مثال: 442109876"
-                          className="w-full bg-[#FAF7F0] border-2 border-[#cfc2b2] rounded px-3 py-1.5 text-xs font-mono text-[#3e271b] focus:outline-none focus:border-[#5a3e2b]"
-                        />
-                      </div>
-
-                      <div>
-                        <label className="block text-xs font-bold text-[#3d2719] mb-1">
-                          كلمة المرور *
-                        </label>
-                        <input
-                          type="password"
-                          required
-                          value={loginPasswordInput}
-                          onChange={(e) => setLoginPasswordInput(e.target.value)}
-                          placeholder="كلمة مرور الحساب الجامعي"
-                          className="w-full bg-[#FAF7F0] border-2 border-[#cfc2b2] rounded px-3 py-1.5 text-xs text-[#3e271b] focus:outline-none focus:border-[#5a3e2b]"
-                        />
-                      </div>
-
-                      <p className="text-[10px] text-[#7d6859] leading-tight">
-                        * ملاحظة: يتم قبول أي مدخلات للتجربة، مع حفظ هوية الطالب «ناصر الدوسري» والرقم الجامعي في الجلسة.
-                      </p>
-
-                      <div className="pt-2 flex items-center justify-end gap-2 border-t border-[#dfd5c6]/60">
-                        <button
-                          type="button"
-                          onClick={() => setIsStudentLoginModalOpen(false)}
-                          className="bevel-btn py-1.5 px-3 rounded text-xs text-[#5a3e2b] cursor-pointer"
-                        >
-                          إلغاء
-                        </button>
-                        <button
-                          type="submit"
-                          className="bevel-btn-brown py-1.5 px-4 rounded text-xs font-bold flex items-center gap-1.5 cursor-pointer text-[#FAF7F0]"
-                        >
-                          <UserCheck className="w-3.5 h-3.5" />
-                          <span>دخول للنظام</span>
-                        </button>
-                      </div>
-                    </form>
+              <div className="vintage-card w-full max-w-md rounded-2xl overflow-hidden shadow-2xl border-2 border-[#5a3e2b] animate-in fade-in zoom-in-95 duration-200">
+                {/* Header */}
+                <div className="vintage-panel p-3.5 sm:p-4 border-b border-[#cfc2b2] flex items-center justify-between bg-gradient-to-r from-[#4a3222] via-[#5a3e2b] to-[#6d4d38] text-[#FAF7F0]">
+                  <div className="flex items-center gap-2">
+                    <UserCheck className="w-5 h-5 text-amber-200" />
+                    <h3 className="text-base font-bold font-amiri">تسجيل دخول الطالب — جامعة شقراء</h3>
                   </div>
+                  <button
+                    type="button"
+                    onClick={() => setIsStudentLoginOpen(false)}
+                    className="w-6 h-6 bg-[#dfd5c6] text-[#3e271b] hover:bg-red-600 hover:text-white border-t border-l border-white border-r border-b border-[#5a3e2b] flex items-center justify-center text-xs cursor-pointer rounded"
+                  >
+                    <X className="w-3.5 h-3.5" />
+                  </button>
                 </div>
+
+                {/* Form */}
+                <form onSubmit={handleStudentLoginSubmit} className="p-4 sm:p-5 space-y-3.5 bg-[#F6F1E8]">
+                  <div>
+                    <label className="block text-xs font-bold text-[#3e271b] mb-1">
+                      الرقم الجامعي *
+                    </label>
+                    <input
+                      type="text"
+                      required
+                      value={loginStudentIdInput}
+                      onChange={(e) => setLoginStudentIdInput(e.target.value)}
+                      placeholder="مثال: 442108542"
+                      className="w-full bg-[#FAF7F0] border-2 border-[#cfc2b2] rounded px-3 py-2 text-xs font-mono text-[#3e271b] focus:outline-none focus:border-[#5a3e2b]"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-xs font-bold text-[#3e271b] mb-1">
+                      كلمة المرور *
+                    </label>
+                    <input
+                      type="password"
+                      required
+                      value={loginPasswordInput}
+                      onChange={(e) => setLoginPasswordInput(e.target.value)}
+                      placeholder="أدخل كلمة المرور"
+                      className="w-full bg-[#FAF7F0] border-2 border-[#cfc2b2] rounded px-3 py-2 text-xs font-mono text-[#3e271b] focus:outline-none focus:border-[#5a3e2b]"
+                    />
+                  </div>
+
+                  <div className="p-2.5 rounded-lg bg-[#ded5c6]/60 border border-[#b8aa99] text-[11px] text-[#5a4637] leading-relaxed">
+                    ℹ️ <strong>بيئة تجريبية:</strong> يمكنك إدخال أي رقم جامعي وكلمة مرور للتجربة. سيتم حفظ الاسم الافتراضي «ناصر الدوسري» والرقم الجامعي في بطاقة الهوية الكلاسيكية.
+                  </div>
+
+                  <div className="pt-2 flex items-center justify-end gap-2 border-t border-[#dfd5c6]">
+                    <button
+                      type="button"
+                      onClick={() => setIsStudentLoginOpen(false)}
+                      className="bevel-btn py-1.5 px-3 rounded text-xs text-[#5a3e2b] cursor-pointer"
+                    >
+                      إلغاء
+                    </button>
+                    <button
+                      type="submit"
+                      className="bevel-btn-brown py-1.5 px-5 rounded text-xs font-bold text-[#FAF7F0] cursor-pointer flex items-center gap-1.5 shadow hover:brightness-105"
+                    >
+                      <UserCheck className="w-4 h-4 text-amber-200" />
+                      <span>دخول ➔</span>
+                    </button>
+                  </div>
+                </form>
               </div>
             </div>
           )}
@@ -1377,45 +1378,44 @@ export default function App() {
                     جامعة شقراء — أمانات الحرم الجامعي
                   </p>
                 </div>
-
-                {/* Mobile logout */}
-                <button
-                  type="button"
-                  onClick={handleLogout}
-                  title="تسجيل الخروج"
-                  className="sm:hidden bevel-btn p-2 rounded text-[#5a3e2b]"
-                >
-                  <LogOut className="w-4 h-4" />
-                </button>
               </div>
 
-              {/* Left Zone: Mini Retro CRT TV Student Badge + Logout */}
-              <div className="flex items-center gap-2.5 w-full sm:w-auto justify-end">
+              {/* Left Zone: Mini Retro CRT TV Student ID Card + Logout Button */}
+              <div className="flex items-center gap-2 sm:gap-3 w-full sm:w-auto justify-end">
                 {userRole === 'student' && (
                   <div
-                    className="relative bg-gradient-to-b from-[#3a291e] via-[#2c1d14] to-[#1c120c] p-1.5 rounded-xl border-2 border-[#160d08] shadow-[inset_0_1px_1px_rgba(255,255,255,0.1),0_2px_6px_rgba(0,0,0,0.3)] flex items-center gap-2"
-                    title="بطاقة بيانات الطالب الجامعي (شاشة كاثودية مصغرة)"
+                    className="bg-gradient-to-b from-[#2e2017] via-[#20150e] to-[#140c08] p-1 sm:p-1.5 rounded-xl border-2 border-[#170e08] shadow-[0_2px_8px_rgba(20,12,6,0.35)] flex items-center gap-1.5 sm:gap-2 shrink-0"
+                    title="بطاقة هوية الطالب — الحساب النشط"
                   >
                     {/* Mini CRT Tube Screen */}
-                    <div className="relative bg-[#EFE7DA] border-2 border-[#5a4231] rounded-lg px-2.5 py-1 shadow-[inset_0_2px_4px_rgba(40,25,15,0.3)] overflow-hidden flex flex-col justify-center text-right min-w-[105px]">
-                      {/* Subtle CRT scanline overlay */}
+                    <div className="bg-[#ede4d4] px-2 sm:px-2.5 py-0.5 sm:py-1 rounded-lg border border-[#6b513e] shadow-[inset_0_1px_4px_rgba(0,0,0,0.25)] flex items-center gap-1.5 sm:gap-2 relative overflow-hidden">
+                      {/* Subtle Mini Scanlines */}
                       <div className="absolute inset-0 scanlines-subtle pointer-events-none opacity-40" />
 
-                      {/* Top line: Student Name */}
-                      <div className="text-xs sm:text-sm font-bold text-[#4A3B32] font-amiri leading-tight z-10 whitespace-nowrap">
-                        {studentName}
-                      </div>
+                      {/* Green CRT Power Indicator LED */}
+                      <div className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse shrink-0 shadow-[0_0_5px_#10b981]" />
 
-                      {/* Bottom line: Student ID */}
-                      <div className="text-[10px] sm:text-[11px] font-bold text-[#8C6D58] font-mono leading-none z-10 mt-0.5 whitespace-nowrap">
-                        {studentId}
+                      {/* Student Details */}
+                      <div className="text-right leading-tight select-none">
+                        <div
+                          className="text-xs sm:text-sm font-bold truncate max-w-[120px] sm:max-w-[150px]"
+                          style={{ color: '#4A3B32' }}
+                        >
+                          {studentName}
+                        </div>
+                        <div
+                          className="text-[10px] sm:text-xs font-mono font-semibold tracking-wide"
+                          style={{ color: '#8C6D58' }}
+                        >
+                          {studentId}
+                        </div>
                       </div>
                     </div>
 
-                    {/* Mini CRT Knobs / Indicator */}
-                    <div className="flex flex-col items-center justify-center gap-1 pl-0.5">
-                      <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse shadow-[0_0_4px_rgba(16,185,129,0.8)]" title="متصل بالنظام" />
-                      <div className="w-2.5 h-2.5 rounded-full bg-[#1b120c] border border-[#524032]" />
+                    {/* Mini TV Dials */}
+                    <div className="hidden sm:flex flex-col gap-1 items-center px-0.5">
+                      <div className="w-2 h-2 rounded-full bg-[#3d2719] border border-[#6b472f]" />
+                      <div className="w-1.5 h-1.5 rounded-full bg-[#3d2719] border border-[#6b472f]" />
                     </div>
                   </div>
                 )}
@@ -1424,7 +1424,7 @@ export default function App() {
                   type="button"
                   onClick={handleLogout}
                   title="العودة لبوابة الدخول"
-                  className="bevel-btn py-1.5 px-3 rounded-lg text-xs sm:text-sm text-[#5a3e2b] items-center gap-1.5 cursor-pointer font-bold flex shadow-sm"
+                  className="bevel-btn py-1.5 px-2.5 sm:px-3 rounded-lg text-xs sm:text-sm text-[#5a3e2b] items-center gap-1.5 cursor-pointer font-bold flex shadow-sm shrink-0"
                 >
                   <LogOut className="w-3.5 h-3.5" />
                   <span>خروج ➔</span>
@@ -1458,14 +1458,13 @@ export default function App() {
 
               {/* Unified Action Bar (Horizontal elegant rectangle directly below greeting) */}
               <div className="vintage-card rounded-xl p-2.5 sm:p-3 mt-4 sm:mt-5 border border-[#cfc2b2] shadow-sm flex items-center justify-center gap-2 sm:gap-3 flex-wrap">
-                {/* 1. Prominent brown button: [تسجيل معثور جديد] */}
+                {/* 1. Prominent brown button: [+ تسجيل معثور جديد] */}
                 <button
                   type="button"
                   onClick={() => setIsRegisterOpen(true)}
                   className="bevel-btn-brown py-2 px-3.5 sm:px-4 rounded-lg text-xs sm:text-sm font-bold flex items-center gap-1.5 cursor-pointer whitespace-nowrap shadow hover:brightness-105 transition-all"
                 >
-                  <Plus className="w-4 h-4 text-[#FAF7F0]" />
-                  <span>تسجيل معثور جديد</span>
+                  <span>+ تسجيل معثور جديد</span>
                 </button>
 
                 {/* 2. To its left: [سجل معثوراتي ومساهماتي] */}
@@ -2329,100 +2328,155 @@ export default function App() {
             </div>
 
             {/* Form */}
-            <form onSubmit={handleRegisterSubmit} className="p-4 sm:p-5 space-y-3 max-h-[75vh] overflow-y-auto">
-              {/* Ownership Selection Capsules */}
-              <div>
-                <label className="block text-xs font-bold text-[#3e271b] mb-1.5">
-                  صفة المعثور ونوع البلاغ *
+            <form onSubmit={handleRegisterSubmit} className="p-4 sm:p-5 space-y-3.5 max-h-[75vh] overflow-y-auto">
+              {/* Ownership Selection (Personal vs Volunteer Contribution) */}
+              <div className="space-y-2 pb-2.5 border-b border-[#dfd5c6]">
+                <label className="block text-xs font-bold text-[#3e271b]">
+                  طبيعة البلاغ / ملكية المعثور *
                 </label>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                  {/* Option 1: Personal */}
                   <button
                     type="button"
                     onClick={() => {
-                      setOwnershipType('personal');
-                      setCapturedImage(null);
+                      setNewOwnershipType('personal');
+                      setNewItemPhoto(null);
                     }}
-                    className={`p-2.5 rounded-xl border-2 text-right transition-all flex items-start gap-2.5 cursor-pointer ${
-                      ownershipType === 'personal'
-                        ? 'bg-[#f4ece0] border-[#5a3e2b] shadow-xs ring-1 ring-[#5a3e2b]'
-                        : 'bg-[#FAF7F0] border-[#cfc2b2] hover:bg-[#f0e8dc]'
+                    className={`p-2.5 rounded-xl border-2 text-right transition-all cursor-pointer flex flex-col gap-1 ${
+                      newOwnershipType === 'personal'
+                        ? 'bg-[#5a3e2b] text-[#FAF7F0] border-[#3e271b] shadow-sm'
+                        : 'bg-[#FAF7F0] text-[#3e271b] border-[#cfc2b2] hover:border-[#8c7768]'
                     }`}
                   >
-                    <span className="text-lg">👤</span>
-                    <div>
-                      <div className="text-xs font-bold text-[#3e271b]">المعثور لي (مفقود شخصي)</div>
-                      <div className="text-[10px] text-[#7d6859] leading-tight mt-0.5">
-                        رفع بلاغ للمشرف الميداني للبحث عنه (0 ساعات تطوعية)
-                      </div>
+                    <div className="flex items-center justify-between w-full">
+                      <span className="font-bold text-xs sm:text-sm flex items-center gap-1.5">
+                        <span>👤</span>
+                        <span>المعثور لي (مفقود شخصي)</span>
+                      </span>
+                      <span className={`w-3.5 h-3.5 rounded-full border flex items-center justify-center ${
+                        newOwnershipType === 'personal' ? 'border-white bg-white' : 'border-[#8c7768]'
+                      }`}>
+                        {newOwnershipType === 'personal' && (
+                          <span className="w-2 h-2 rounded-full bg-[#5a3e2b]" />
+                        )}
+                      </span>
                     </div>
+                    <p className={`text-[10px] leading-tight ${
+                      newOwnershipType === 'personal' ? 'text-[#e8dec0]' : 'text-[#7d6859]'
+                    }`}>
+                      رفع بلاغ للمشرف الميداني للبحث عنه (0 ساعات تطوعية)
+                    </p>
                   </button>
 
+                  {/* Option 2: Volunteer Contribution */}
                   <button
                     type="button"
-                    onClick={() => setOwnershipType('contribution')}
-                    className={`p-2.5 rounded-xl border-2 text-right transition-all flex items-start gap-2.5 cursor-pointer ${
-                      ownershipType === 'contribution'
-                        ? 'bg-[#e8f3ea] border-emerald-700 shadow-xs ring-1 ring-emerald-700'
-                        : 'bg-[#FAF7F0] border-[#cfc2b2] hover:bg-[#f0e8dc]'
+                    onClick={() => {
+                      setNewOwnershipType('volunteer');
+                    }}
+                    className={`p-2.5 rounded-xl border-2 text-right transition-all cursor-pointer flex flex-col gap-1 ${
+                      newOwnershipType === 'volunteer'
+                        ? 'bg-[#5a3e2b] text-[#FAF7F0] border-[#3e271b] shadow-sm'
+                        : 'bg-[#FAF7F0] text-[#3e271b] border-[#cfc2b2] hover:border-[#8c7768]'
                     }`}
                   >
-                    <span className="text-lg">🤝</span>
-                    <div>
-                      <div className="text-xs font-bold text-[#1e5927]">المعثور لغيري (مساهمة تطوعية)</div>
-                      <div className="text-[10px] text-[#2b6635] leading-tight mt-0.5">
-                        توثيق غرض عثرت عليه وتسليمه للأمانات (+2 ساعات تطوعية)
-                      </div>
+                    <div className="flex items-center justify-between w-full">
+                      <span className="font-bold text-xs sm:text-sm flex items-center gap-1.5">
+                        <span>🤝</span>
+                        <span>المعثور لغيري (مساهمة تطوعية)</span>
+                      </span>
+                      <span className={`w-3.5 h-3.5 rounded-full border flex items-center justify-center ${
+                        newOwnershipType === 'volunteer' ? 'border-white bg-white' : 'border-[#8c7768]'
+                      }`}>
+                        {newOwnershipType === 'volunteer' && (
+                          <span className="w-2 h-2 rounded-full bg-[#5a3e2b]" />
+                        )}
+                      </span>
                     </div>
+                    <p className={`text-[10px] leading-tight ${
+                      newOwnershipType === 'volunteer' ? 'text-[#e8dec0]' : 'text-[#7d6859]'
+                    }`}>
+                      توثيق ومساهمة تطوعية تُحتسب عليها ساعات للطالب فور تسليم الغرض لصاحبه
+                    </p>
                   </button>
                 </div>
               </div>
 
-              {/* Mandatory Camera / Upload Field for Volunteer Contribution */}
-              {ownershipType === 'contribution' && (
-                <div className="p-3 bg-[#f2f8f3] border-2 border-dashed border-[#9dc3a3] rounded-xl space-y-2">
-                  <label className="block text-xs font-bold text-[#1e5927] flex items-center justify-between">
-                    <span className="flex items-center gap-1.5">
-                      <Camera className="w-3.5 h-3.5 text-emerald-800" />
-                      <span>تصوير المعثور أو رفع صورة (إلزامي للمساهمة) *</span>
-                    </span>
-                    <span className="text-[10px] text-emerald-700 font-normal">كاميرا الجوال أو المعرض</span>
-                  </label>
-
-                  <div className="flex items-center gap-3 flex-wrap">
-                    <input
-                      type="file"
-                      id="camera-item-input"
-                      accept="image/*"
-                      capture="environment"
-                      onChange={handleImageCapture}
-                      className="hidden"
-                    />
-                    <label
-                      htmlFor="camera-item-input"
-                      className="bevel-btn-brown py-1.5 px-3 rounded-lg text-xs font-bold flex items-center gap-1.5 cursor-pointer text-[#FAF7F0] shrink-0"
-                    >
-                      <Camera className="w-4 h-4" />
-                      <span>📷 التقاط صورة أو اختيار ملف</span>
+              {/* Mandatory Photo Upload & Camera for Volunteer Contribution */}
+              {newOwnershipType === 'volunteer' && (
+                <div className="p-3 bg-[#fdfbf7] rounded-xl border-2 border-dashed border-[#bfae9c] space-y-2">
+                  <div className="flex items-center justify-between">
+                    <label className="text-xs font-bold text-[#5a3e2b] flex items-center gap-1.5">
+                      <Camera className="w-4 h-4 text-[#5a3e2b]" />
+                      <span>📷 تصوير المعثور أو رفع صورة (إلزامي للتوثيق) *</span>
                     </label>
-
-                    {capturedImage ? (
-                      <div className="relative w-14 h-14 rounded-lg overflow-hidden border-2 border-[#5a3e2b] shadow-sm shrink-0 bg-white">
-                        <img src={capturedImage} alt="معاينة المعثور" className="w-full h-full object-cover" />
-                        <button
-                          type="button"
-                          onClick={() => setCapturedImage(null)}
-                          className="absolute top-0 right-0 bg-red-600 text-white rounded-bl p-0.5 text-[9px] cursor-pointer"
-                          title="حذف الصورة"
-                        >
-                          <X className="w-2.5 h-2.5" />
-                        </button>
-                      </div>
-                    ) : (
-                      <span className="text-[11px] text-[#4b6a51]">
-                        لم تلتقط صورة بعد. تصوير المعثور إلزامي لاحتساب الساعات وتوثيق الأمانة.
-                      </span>
-                    )}
+                    <span className="text-[10px] text-emerald-800 font-bold bg-[#e8f3ea] px-2 py-0.5 rounded border border-[#b2d8b8]">
+                      +2 ساعة معتمدة عند التسليم
+                    </span>
                   </div>
+
+                  <input
+                    ref={photoInputRef}
+                    type="file"
+                    accept="image/*"
+                    capture="environment"
+                    onChange={handlePhotoUpload}
+                    className="hidden"
+                  />
+
+                  {newItemPhoto ? (
+                    <div className="flex items-center gap-3 bg-[#FAF7F0] p-2 rounded-lg border border-[#cfc2b2]">
+                      {/* Classic Retro Thumbnail Frame */}
+                      <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-lg overflow-hidden border-2 border-[#5a3e2b] shadow-inner bg-black/5 shrink-0 relative group">
+                        <img
+                          src={newItemPhoto}
+                          alt="معاينة المعثور"
+                          className="w-full h-full object-cover"
+                        />
+                      </div>
+                      <div className="flex-1 min-w-0 space-y-1">
+                        <div className="text-xs font-bold text-[#1e5927] flex items-center gap-1">
+                          <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" />
+                          <span>تم توثيق الصورة بنجاح</span>
+                        </div>
+                        <div className="text-[10px] text-[#7d6859]">
+                          صورة المعثور جاهزة للإرفاق مع البلاغ
+                        </div>
+                        <div className="flex items-center gap-2 pt-0.5">
+                          <button
+                            type="button"
+                            onClick={() => photoInputRef.current?.click()}
+                            className="bevel-btn px-2 py-0.5 text-[10px] font-bold text-[#5a3e2b] flex items-center gap-1 cursor-pointer"
+                          >
+                            <Camera className="w-3 h-3" />
+                            <span>إعادة التقاط</span>
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => setNewItemPhoto(null)}
+                            className="bevel-btn px-2 py-0.5 text-[10px] font-bold text-red-700 flex items-center gap-1 cursor-pointer"
+                          >
+                            <Trash2 className="w-3 h-3 text-red-600" />
+                            <span>حذف</span>
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  ) : (
+                    <button
+                      type="button"
+                      onClick={() => photoInputRef.current?.click()}
+                      className="w-full py-3.5 px-3 rounded-lg border-2 border-dashed border-[#8c7768] bg-[#f5ede2] hover:bg-[#ede2d2] text-[#5a3e2b] text-xs font-bold flex flex-col items-center justify-center gap-1 cursor-pointer transition-colors shadow-xs"
+                    >
+                      <div className="w-9 h-9 rounded-full bg-[#dfd5c6] flex items-center justify-center shadow-inner">
+                        <Camera className="w-5 h-5 text-[#5a3e2b]" />
+                      </div>
+                      <span>اضغط لفتح الكاميرا والتقاط المعثور أو الاختيار من المعرض</span>
+                      <span className="text-[10px] text-[#7d6859] font-normal">
+                        مطلوب لإثبات توثيق الغرض واحتساب الساعات التطوعية
+                      </span>
+                    </button>
+                  )}
                 </div>
               )}
 
