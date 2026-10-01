@@ -734,6 +734,25 @@ export default function App() {
   const [loginStudentIdInput, setLoginStudentIdInput] = useState<string>('442108542');
   const [loginPasswordInput, setLoginPasswordInput] = useState<string>('');
 
+  // Staff Profile & CRT Login State
+  const [staffName, setStaffName] = useState<string>('أ. محمد العتيبي - مسؤول الأمانات');
+  const [staffId, setStaffId] = useState<string>('10482');
+  const [isStaffLoginOpen, setIsStaffLoginOpen] = useState<boolean>(false);
+  const [loginStaffIdInput, setLoginStaffIdInput] = useState<string>('10482');
+  const [loginStaffPasswordInput, setLoginStaffPasswordInput] = useState<string>('');
+
+  const handleStaffLoginSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    setStaffName('أ. محمد العتيبي - مسؤول الأمانات');
+    if (loginStaffIdInput.trim()) {
+      setStaffId(loginStaffIdInput.trim());
+    } else {
+      setStaffId('10482');
+    }
+    setIsStaffLoginOpen(false);
+    handleLogin('staff');
+  };
+
   const handlePhotoUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
@@ -1090,7 +1109,7 @@ export default function App() {
 
                       <button
                         type="button"
-                        onClick={() => handleLogin('staff')}
+                        onClick={() => setIsStaffLoginOpen(true)}
                         className="flex-1 bevel-btn-brown py-2.5 sm:py-3 px-3 sm:px-4 rounded font-bold text-xs sm:text-sm flex items-center justify-center gap-2 cursor-pointer"
                       >
                         <Briefcase className="w-4 h-4 text-[#FAF7F0]" />
@@ -1225,6 +1244,80 @@ export default function App() {
                     >
                       <UserCheck className="w-4 h-4 text-amber-200" />
                       <span>دخول ➔</span>
+                    </button>
+                  </div>
+                </form>
+              </div>
+            </div>
+          )}
+
+          {/* Staff Login Modal (Accepts any test input, saves 'أ. محمد العتيبي - مسؤول الأمانات' and staff ID) */}
+          {isStaffLoginOpen && (
+            <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-black/60 backdrop-blur-xs">
+              <div className="vintage-card w-full max-w-md rounded-2xl overflow-hidden shadow-2xl border-2 border-[#5a3e2b] animate-in fade-in zoom-in-95 duration-200">
+                {/* Header */}
+                <div className="vintage-panel p-3.5 sm:p-4 border-b border-[#cfc2b2] flex items-center justify-between bg-gradient-to-r from-[#4a3222] via-[#5a3e2b] to-[#6d4d38] text-[#FAF7F0]">
+                  <div className="flex items-center gap-2">
+                    <Briefcase className="w-5 h-5 text-amber-200" />
+                    <h3 className="text-base font-bold font-amiri">تسجيل دخول موظف الأمانات — جامعة شقراء</h3>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => setIsStaffLoginOpen(false)}
+                    className="w-6 h-6 bg-[#dfd5c6] text-[#3e271b] hover:bg-red-600 hover:text-white border-t border-l border-white border-r border-b border-[#5a3e2b] flex items-center justify-center text-xs cursor-pointer rounded"
+                  >
+                    <X className="w-3.5 h-3.5" />
+                  </button>
+                </div>
+
+                {/* Form */}
+                <form onSubmit={handleStaffLoginSubmit} className="p-4 sm:p-5 space-y-3.5 bg-[#F6F1E8]">
+                  <div>
+                    <label className="block text-xs font-bold text-[#3e271b] mb-1">
+                      الرقم الوظيفي *
+                    </label>
+                    <input
+                      type="text"
+                      required
+                      value={loginStaffIdInput}
+                      onChange={(e) => setLoginStaffIdInput(e.target.value)}
+                      placeholder="مثال: 10482"
+                      className="w-full bg-[#FAF7F0] border-2 border-[#cfc2b2] rounded px-3 py-2 text-xs font-mono text-[#3e271b] focus:outline-none focus:border-[#5a3e2b]"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-xs font-bold text-[#3e271b] mb-1">
+                      كلمة المرور *
+                    </label>
+                    <input
+                      type="password"
+                      required
+                      value={loginStaffPasswordInput}
+                      onChange={(e) => setLoginStaffPasswordInput(e.target.value)}
+                      placeholder="أدخل كلمة المرور"
+                      className="w-full bg-[#FAF7F0] border-2 border-[#cfc2b2] rounded px-3 py-2 text-xs font-mono text-[#3e271b] focus:outline-none focus:border-[#5a3e2b]"
+                    />
+                  </div>
+
+                  <div className="p-2.5 rounded-lg bg-[#ded5c6]/60 border border-[#b8aa99] text-[11px] text-[#5a4637] leading-relaxed">
+                    ℹ️ <strong>بيئة تجريبية:</strong> يمكنك إدخال أي رقم تجريبي وكلمة مرور للتجربة، وسيتم اعتماد الاسم الافتراضي لأحد موظفي الأمانات: <strong>«أ. محمد العتيبي - مسؤول الأمانات»</strong>.
+                  </div>
+
+                  <div className="pt-2 flex items-center justify-end gap-2 border-t border-[#dfd5c6]">
+                    <button
+                      type="button"
+                      onClick={() => setIsStaffLoginOpen(false)}
+                      className="bevel-btn py-1.5 px-3 rounded text-xs text-[#5a3e2b] cursor-pointer"
+                    >
+                      إلغاء
+                    </button>
+                    <button
+                      type="submit"
+                      className="bevel-btn-brown py-1.5 px-5 rounded text-xs font-bold text-[#FAF7F0] cursor-pointer flex items-center gap-1.5 shadow hover:brightness-105"
+                    >
+                      <Briefcase className="w-4 h-4 text-amber-200" />
+                      <span>دخول كموظف ➔</span>
                     </button>
                   </div>
                 </form>
@@ -1380,7 +1473,7 @@ export default function App() {
                 </div>
               </div>
 
-              {/* Left Zone: Mini Retro CRT TV Student ID Card + Logout Button */}
+              {/* Left Zone: Mini Retro CRT TV ID Card + Logout Button */}
               <div className="flex items-center gap-2 sm:gap-3 w-full sm:w-auto justify-end">
                 {userRole === 'student' && (
                   <div
@@ -1420,6 +1513,44 @@ export default function App() {
                   </div>
                 )}
 
+                {userRole === 'staff' && (
+                  <div
+                    className="bg-gradient-to-b from-[#2e2017] via-[#20150e] to-[#140c08] p-1 sm:p-1.5 rounded-xl border-2 border-[#170e08] shadow-[0_2px_8px_rgba(20,12,6,0.35)] flex items-center gap-1.5 sm:gap-2 shrink-0"
+                    title="بطاقة هوية موظف الأمانات — الحساب النشط"
+                  >
+                    {/* Mini CRT Tube Screen */}
+                    <div className="bg-[#ede4d4] px-2 sm:px-2.5 py-0.5 sm:py-1 rounded-lg border border-[#6b513e] shadow-[inset_0_1px_4px_rgba(0,0,0,0.25)] flex items-center gap-1.5 sm:gap-2 relative overflow-hidden">
+                      {/* Subtle Mini Scanlines */}
+                      <div className="absolute inset-0 scanlines-subtle pointer-events-none opacity-40" />
+
+                      {/* Amber CRT Power Indicator LED for Staff */}
+                      <div className="w-2 h-2 rounded-full bg-amber-500 animate-pulse shrink-0 shadow-[0_0_5px_#f59e0b]" />
+
+                      {/* Staff Details */}
+                      <div className="text-right leading-tight select-none">
+                        <div
+                          className="text-xs sm:text-sm font-bold truncate max-w-[130px] sm:max-w-[170px]"
+                          style={{ color: '#4A3B32' }}
+                        >
+                          {staffName}
+                        </div>
+                        <div
+                          className="text-[10px] sm:text-xs font-mono font-semibold tracking-wide"
+                          style={{ color: '#8C6D58' }}
+                        >
+                          الرقم الوظيفي: {staffId}
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Mini TV Dials */}
+                    <div className="hidden sm:flex flex-col gap-1 items-center px-0.5">
+                      <div className="w-2 h-2 rounded-full bg-[#3d2719] border border-[#6b472f]" />
+                      <div className="w-1.5 h-1.5 rounded-full bg-[#3d2719] border border-[#6b472f]" />
+                    </div>
+                  </div>
+                )}
+
                 <button
                   type="button"
                   onClick={handleLogout}
@@ -1437,81 +1568,87 @@ export default function App() {
               - Student View: Free, prominent, unboxed greeting text in center + unified horizontal action bar.
               - Staff View: Shows staff control bar & 4 stats cards for managing inventory. */}
           {userRole === 'student' ? (
-            <div className="py-4 sm:py-6 mb-5 flex flex-col items-center justify-center text-center w-full">
-              {/* Free, prominent hero greeting without any enclosing box/border */}
-              <h2 className="text-2xl sm:text-3xl md:text-4xl lg:text-[42px] font-bold text-[#3e271b] font-amiri tracking-tight mb-2 sm:mb-2.5 leading-snug flex items-center justify-center flex-wrap gap-x-2">
-                <span>{typedPart1}</span>
-                {typedPart2 && <span className="text-[#3e271b]">{typedPart2}</span>}
-                {isCursorActive && (
-                  <span className="inline-block w-2 sm:w-2.5 h-7 sm:h-9 bg-[#5a3e2b] animate-pulse rounded-xs align-middle" />
-                )}
-              </h2>
-              <p
-                className={`text-xs sm:text-sm md:text-base text-[#7d6859] font-medium leading-normal transition-all duration-700 ${
-                  showSubtitle
-                    ? 'opacity-100 transform translate-y-0'
-                    : 'opacity-0 transform translate-y-2 pointer-events-none'
-                }`}
-              >
-                بوابة الأمانات الموحدة لكافة الكليات
-              </p>
+            <div className="py-4 sm:py-6 mb-5 flex flex-col items-center justify-center text-center w-full relative overflow-hidden rounded-2xl">
+              {/* Animated CRT Scanlines Overlay (Thin horizontal repeating lines moving downwards smoothly with subtle opacity) */}
+              <div className="crt-animated-scanlines absolute inset-0 pointer-events-none rounded-2xl z-0" />
 
-              {/* Unified Action Bar (Horizontal elegant rectangle directly below greeting) */}
-              <div className="vintage-card rounded-xl p-2.5 sm:p-3 mt-4 sm:mt-5 border border-[#cfc2b2] shadow-sm flex items-center justify-center gap-2 sm:gap-3 flex-wrap">
-                {/* 1. Prominent brown button: [+ تسجيل معثور جديد] */}
-                <button
-                  type="button"
-                  onClick={() => setIsRegisterOpen(true)}
-                  className="bevel-btn-brown py-2 px-3.5 sm:px-4 rounded-lg text-xs sm:text-sm font-bold flex items-center gap-1.5 cursor-pointer whitespace-nowrap shadow hover:brightness-105 transition-all"
-                >
-                  <span>+ تسجيل معثور جديد</span>
-                </button>
-
-                {/* 2. To its left: [سجل معثوراتي ومساهماتي] */}
-                <button
-                  type="button"
-                  onClick={() => setIsMyItemsOpen(true)}
-                  className="bevel-btn py-2 px-3 sm:px-3.5 rounded-lg text-xs sm:text-sm font-bold flex items-center gap-1.5 cursor-pointer text-[#3e271b] shadow hover:bg-[#eae0d2] transition-colors"
-                  title="عرض المعثورات التي قمت برفعها ومتابعة الساعات المكتسبة"
-                >
-                  <ClipboardList className="w-4 h-4 text-[#5a3e2b]" />
-                  <span>سجل معثوراتي ومساهماتي</span>
-                  {myItemsList.length > 0 && (
-                    <span className="bg-[#5a3e2b] text-[#FAF7F0] text-[10px] px-1.5 py-0.2 rounded-full font-mono">
-                      {myItemsList.length}
-                    </span>
+              <div className="relative z-10 flex flex-col items-center justify-center text-center w-full">
+                {/* Free, prominent hero greeting without any enclosing box/border */}
+                <h2 className="text-2xl sm:text-3xl md:text-4xl lg:text-[42px] font-bold text-[#3e271b] font-amiri tracking-tight mb-2 sm:mb-2.5 leading-snug flex items-center justify-center flex-wrap gap-x-2">
+                  <span>{typedPart1}</span>
+                  {typedPart2 && <span className="text-[#3e271b]">{typedPart2}</span>}
+                  {isCursorActive && (
+                    <span className="inline-block w-2 sm:w-2.5 h-7 sm:h-9 bg-[#5a3e2b] animate-pulse rounded-xs align-middle" />
                   )}
-                </button>
-
-                {/* 3. To its left: Retro Inset/Bevel capsule: [⏳ الساعات التطوعية: X ساعة] */}
-                <div
-                  className="vintage-panel px-3 sm:px-3.5 py-1.5 rounded-lg border border-[#bfae9c] flex items-center gap-1.5 text-xs sm:text-sm font-bold text-[#5a3e2b] shadow-inner bg-[#fcf8f0]"
-                  title="رصيد الساعات التطوعية المكتسبة مقابل المعثورات المسلمة لأصحابها"
+                </h2>
+                <p
+                  className={`text-xs sm:text-sm md:text-base text-[#7d6859] font-medium leading-normal transition-all duration-700 ${
+                    showSubtitle
+                      ? 'opacity-100 transform translate-y-0'
+                      : 'opacity-0 transform translate-y-2 pointer-events-none'
+                  }`}
                 >
-                  <span className="text-sm">⏳</span>
-                  <span>الساعات التطوعية:</span>
-                  <span className="font-mono text-emerald-800 text-xs sm:text-sm font-black px-1.5 py-0.5 bg-[#e8f3ea] rounded border border-[#b2d8b8]">
-                    {volunteerHours} ساعة
-                  </span>
+                  بوابة الأمانات الموحدة لكافة الكليات
+                </p>
+
+                {/* Unified Action Bar (Horizontal elegant rectangle directly below greeting) */}
+                <div className="vintage-card rounded-xl p-2.5 sm:p-3 mt-4 sm:mt-5 border border-[#cfc2b2] shadow-sm flex items-center justify-center gap-2 sm:gap-3 flex-wrap">
+                  {/* 1. Prominent brown button: [+ تسجيل معثور جديد] */}
+                  <button
+                    type="button"
+                    onClick={() => setIsRegisterOpen(true)}
+                    className="bevel-btn-brown py-2 px-3.5 sm:px-4 rounded-lg text-xs sm:text-sm font-bold flex items-center gap-1.5 cursor-pointer whitespace-nowrap shadow hover:brightness-105 transition-all"
+                  >
+                    <span>+ تسجيل معثور جديد</span>
+                  </button>
+
+                  {/* 2. To its left: [سجل معثوراتي ومساهماتي] */}
+                  <button
+                    type="button"
+                    onClick={() => setIsMyItemsOpen(true)}
+                    className="bevel-btn py-2 px-3 sm:px-3.5 rounded-lg text-xs sm:text-sm font-bold flex items-center gap-1.5 cursor-pointer text-[#3e271b] shadow hover:bg-[#eae0d2] transition-colors"
+                    title="عرض المعثورات التي قمت برفعها ومتابعة الساعات المكتسبة"
+                  >
+                    <ClipboardList className="w-4 h-4 text-[#5a3e2b]" />
+                    <span>سجل معثوراتي ومساهماتي</span>
+                    {myItemsList.length > 0 && (
+                      <span className="bg-[#5a3e2b] text-[#FAF7F0] text-[10px] px-1.5 py-0.2 rounded-full font-mono">
+                        {myItemsList.length}
+                      </span>
+                    )}
+                  </button>
+
+                  {/* 3. To its left: Retro Inset/Bevel capsule: [⏳ الساعات التطوعية: X ساعة] */}
+                  <div
+                    className="vintage-panel px-3 sm:px-3.5 py-1.5 rounded-lg border border-[#bfae9c] flex items-center gap-1.5 text-xs sm:text-sm font-bold text-[#5a3e2b] shadow-inner bg-[#fcf8f0]"
+                    title="رصيد الساعات التطوعية المكتسبة مقابل المعثورات المسلمة لأصحابها"
+                  >
+                    <span className="text-sm">⏳</span>
+                    <span>الساعات التطوعية:</span>
+                    <span className="font-mono text-emerald-800 text-xs sm:text-sm font-black px-1.5 py-0.5 bg-[#e8f3ea] rounded border border-[#b2d8b8]">
+                      {volunteerHours} ساعة
+                    </span>
+                  </div>
                 </div>
               </div>
             </div>
           ) : (
             <>
               {/* Staff Guidance Header */}
-              <div className="vintage-panel rounded-lg px-4 py-2.5 mb-3 flex items-center justify-between gap-3 text-center sm:text-right border border-[#d5c8b7] w-full flex-wrap">
-                <div className="flex items-center gap-2.5 mx-auto sm:mx-0">
+              <div className="vintage-panel rounded-lg px-4 py-2.5 mb-3 flex items-center justify-between gap-3 text-center sm:text-right border border-[#d5c8b7] w-full flex-wrap relative overflow-hidden">
+                {/* Animated scanlines overlay for staff banner */}
+                <div className="crt-animated-scanlines absolute inset-0 pointer-events-none rounded-lg z-0" />
+                <div className="relative z-10 flex items-center gap-2.5 mx-auto sm:mx-0">
                   <span className="text-sm sm:text-base font-bold text-[#4a3222] font-amiri tracking-wide">
                     ضاع منك شي؟ تراه في الحفظ والصون
                   </span>
                 </div>
-                <div className="flex items-center gap-2 mx-auto sm:mx-0">
+                <div className="relative z-10 flex items-center gap-2 mx-auto sm:mx-0">
                   <button
                     type="button"
                     onClick={() => setIsRegisterOpen(true)}
                     className="bevel-btn-brown py-1 px-3 rounded text-xs font-bold flex items-center gap-1 cursor-pointer whitespace-nowrap shadow"
                   >
-                    <Plus className="w-3.5 h-3.5" />
                     <span>+ تسجيل معثور جديد</span>
                   </button>
                   <span className="text-xs text-[#8c7768] font-mono">
@@ -1799,7 +1936,7 @@ export default function App() {
               )}
 
           {/* Search & Filters Section */}
-          <section className="vintage-card rounded-xl p-3 sm:p-4 mb-4 w-full">
+          <section id="inventory-section" className="vintage-card rounded-xl p-3 sm:p-4 mb-4 w-full">
             <div className="flex flex-col md:flex-row gap-3 mb-3">
               {/* Live search input */}
               <div className="relative flex-1">
@@ -2023,11 +2160,102 @@ export default function App() {
           </>
         )}
 
-          {/* Footer */}
-          <footer className="mt-8 pt-4 border-t border-[#dfd5c6] text-center text-xs text-[#8c7768]">
-            <div className="flex flex-col sm:flex-row items-center justify-between gap-2">
-              <span>جامعة شقراء — عمادة شؤون الطلاب — وحدة المفقودات والأمانات الجامعية © ١٤٤٧ هـ</span>
-              <span className="font-amiri font-bold text-[#5a3e2b]">مَحْفُوظ | في الحفظ والصون دائماً</span>
+          {/* Retro TV Footer Section */}
+          <footer className="mt-10 mb-4 w-full">
+            {/* TV Chassis Outer Frame */}
+            <div className="bg-gradient-to-b from-[#2e2017] via-[#241710] to-[#150d08] p-2.5 sm:p-4 rounded-3xl border-2 sm:border-4 border-[#170e08] shadow-[0_15px_35px_rgba(25,15,8,0.4)] relative">
+              {/* Top Ventilation Slits */}
+              <div className="flex justify-center gap-1.5 mb-2.5 opacity-40">
+                <div className="w-8 h-0.5 bg-[#0f0906] rounded-full" />
+                <div className="w-8 h-0.5 bg-[#0f0906] rounded-full" />
+                <div className="w-8 h-0.5 bg-[#0f0906] rounded-full" />
+                <div className="w-8 h-0.5 bg-[#0f0906] rounded-full" />
+              </div>
+
+              {/* Inner CRT Screen Surface */}
+              <div className="bg-[#ded5c6] rounded-2xl border-2 border-[#543f30] p-4 sm:p-6 shadow-[inset_0_2px_15px_rgba(30,18,10,0.35)] relative overflow-hidden flex flex-col items-center justify-center text-center">
+                {/* CRT Scanline Texture */}
+                <div className="absolute inset-0 scanlines-subtle pointer-events-none opacity-40" />
+
+                {/* Top Status Indicators inside CRT Screen */}
+                <div className="w-full flex items-center justify-between text-[10px] font-mono text-[#786454] pb-1.5 mb-3 border-b border-[#c4b5a2]/60 z-10">
+                  <span className="flex items-center gap-1.5">
+                    <span className="w-2 h-2 rounded-full bg-emerald-600 inline-block animate-pulse" />
+                    <span>CH-04 ● SHAQRA CUSTODY NET</span>
+                  </span>
+                  <span>SOLID STATE V1.0</span>
+                </div>
+
+                {/* Central Brand Identity */}
+                <div className="relative z-10 flex flex-col items-center w-full">
+                  <div className="flex items-center gap-2 mb-1.5">
+                    <div className="w-8 h-8 rounded-lg bg-[#5a3e2b] flex items-center justify-center text-amber-200 shadow-xs border border-[#3e271b]">
+                      <ShieldCheck className="w-5 h-5" />
+                    </div>
+                    <h3 className="text-xl sm:text-2xl font-bold text-[#3e271b] font-amiri tracking-wide">
+                      محفوظ | Mahfod
+                    </h3>
+                  </div>
+
+                  {/* Noble Slogan */}
+                  <p className="text-xs sm:text-sm text-[#5a4334] font-medium max-w-xl mx-auto leading-relaxed my-1">
+                    «محفوظ.. في الحفظ والصون، عهدٌ جامعٌ بالأمانة ورعاية للمفقودات حتى تعود لأصحابها»
+                  </p>
+                  <p className="text-[11px] text-[#7d6859] mb-3">
+                    المنظومة الرقمية الموحدة لأمانات ومفقودات الحرم الجامعي — جامعة شقراء
+                  </p>
+
+                  {/* Quick Navigation Links */}
+                  <div className="flex items-center justify-center gap-1.5 sm:gap-2 flex-wrap text-xs my-2">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setSelectedCollege('كل الكليات والمرافق');
+                        setSelectedCategory('all');
+                        setSearchQuery('');
+                        window.scrollTo({ top: 0, behavior: 'smooth' });
+                      }}
+                      className="bevel-btn px-2.5 py-1 rounded text-[#3e271b] font-medium text-xs hover:bg-[#ede2d2] cursor-pointer"
+                    >
+                      الرئيسية
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        const el = document.getElementById('inventory-section') || document.querySelector('main');
+                        el?.scrollIntoView({ behavior: 'smooth' });
+                      }}
+                      className="bevel-btn px-2.5 py-1 rounded text-[#3e271b] font-medium text-xs hover:bg-[#ede2d2] cursor-pointer"
+                    >
+                      المعثورات
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        const el = document.getElementById('inventory-section');
+                        el?.scrollIntoView({ behavior: 'smooth' });
+                      }}
+                      className="bevel-btn px-2.5 py-1 rounded text-[#3e271b] font-medium text-xs hover:bg-[#ede2d2] cursor-pointer"
+                    >
+                      التصنيفات
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        showToast('مكاتب شؤون الطلاب والأمانات موزعة بكافة الكليات وتعمل خلال الدوام الرسمي');
+                      }}
+                      className="bevel-btn px-2.5 py-1 rounded text-[#3e271b] font-medium text-xs hover:bg-[#ede2d2] cursor-pointer"
+                    >
+                      مكاتب شؤون الطلاب والأمانات
+                    </button>
+                  </div>
+
+                  {/* Copyright Notice */}
+                  <div className="w-full max-w-md pt-2.5 mt-2 border-t border-[#c4b5a2]/70 text-[10px] sm:text-[11px] font-mono text-[#786454]">
+                    محفوظ — Mahfod © 2026 | Powered by Netlify
+                  </div>
+                </div>
+              </div>
             </div>
           </footer>
         </div>

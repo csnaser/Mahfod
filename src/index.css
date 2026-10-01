@@ -45,6 +45,29 @@
   pointer-events: none;
 }
 
+/* Animated CRT Scanlines for Hero Banner (Soft 0.04 opacity, continuous slow vertical scroll) */
+.crt-animated-scanlines {
+  background: repeating-linear-gradient(
+    to bottom,
+    rgba(62, 39, 27, 0) 0px,
+    rgba(62, 39, 27, 0) 2px,
+    rgba(62, 39, 27, 0.04) 2px,
+    rgba(62, 39, 27, 0.04) 4px
+  );
+  background-size: 100% 8px;
+  animation: crtScanlinesVerticalRoll 8s linear infinite;
+  pointer-events: none;
+}
+
+@keyframes crtScanlinesVerticalRoll {
+  0% {
+    background-position: 0 0;
+  }
+  100% {
+    background-position: 0 120px;
+  }
+}
+
 /* Authentic Warm Vintage Bevels */
 .vintage-card {
   background-color: #FAF7F0;
