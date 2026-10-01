@@ -1,0 +1,292 @@
+@import "tailwindcss";
+
+@layer base {
+  body {
+    font-family: 'IBM Plex Sans Arabic', 'Noto Naskh Arabic', 'Segoe UI', system-ui, sans-serif;
+    background-color: #D5CBB9;
+    color: #3e271b;
+  }
+}
+
+.font-diwani, .font-amiri {
+  font-family: 'Amiri', serif !important;
+}
+
+/* CRT Screen Curvature & Glass Effect */
+.crt-glass {
+  background: radial-gradient(circle at 50% 50%, #e2d9cd 0%, #d4c8b8 70%, #c4b5a2 100%);
+  box-shadow: inset 0 0 30px rgba(45, 30, 15, 0.4), inset 0 0 10px rgba(0, 0, 0, 0.5);
+}
+
+/* Rotary dials and knobs */
+.tv-dial {
+  background: radial-gradient(circle at 35% 35%, #524235 0%, #261b13 70%, #150d08 100%);
+  border: 2px solid #5a4636;
+  box-shadow: 2px 2px 5px rgba(0, 0, 0, 0.6), inset 1px 1px 2px rgba(255, 255, 255, 0.2);
+}
+
+.tv-dial:active {
+  transform: rotate(20deg);
+}
+
+/* Speaker Louvers */
+.tv-grille-line {
+  background: #150e09;
+  box-shadow: 0 1px 0 rgba(255, 255, 255, 0.1);
+}
+
+/* Warm Vintage Scanlines (Ultra-subtle <= 3% opacity to prevent eye fatigue) */
+.scanlines-subtle {
+  background: linear-gradient(
+    rgba(30, 20, 10, 0) 50%, 
+    rgba(30, 20, 10, 0.025) 50%
+  );
+  background-size: 100% 3px;
+  pointer-events: none;
+}
+
+/* Authentic Warm Vintage Bevels */
+.vintage-card {
+  background-color: #FAF7F0;
+  border-top: 2px solid #ffffff;
+  border-right: 2px solid #ffffff;
+  border-bottom: 2px solid #cfc2b2;
+  border-left: 2px solid #cfc2b2;
+  box-shadow: 2px 2px 5px rgba(62, 39, 27, 0.06);
+}
+
+.vintage-panel {
+  background-color: #EFE7DA;
+  border-top: 2px solid #d5c8b7;
+  border-left: 2px solid #d5c8b7;
+  border-right: 2px solid #ffffff;
+  border-bottom: 2px solid #ffffff;
+}
+
+.bevel-out {
+  border-top: 2px solid #ffffff;
+  border-left: 2px solid #ffffff;
+  border-right: 2px solid #a89a8c;
+  border-bottom: 2px solid #a89a8c;
+}
+
+.bevel-in {
+  border-top: 2px solid #a89a8c;
+  border-left: 2px solid #a89a8c;
+  border-right: 2px solid #ffffff;
+  border-bottom: 2px solid #ffffff;
+}
+
+/* 90s Classic Bevel Buttons */
+.bevel-btn {
+  background-color: #dfd5c6;
+  border-top: 2px solid #ffffff;
+  border-left: 2px solid #ffffff;
+  border-right: 2px solid #736253;
+  border-bottom: 2px solid #736253;
+  box-shadow: 1px 1px 0px #382b22;
+  color: #3e271b;
+  transition: all 0.05s ease-in-out;
+}
+
+.bevel-btn:hover {
+  background-color: #e5dcd0;
+}
+
+.bevel-btn:active {
+  border-top: 2px solid #736253;
+  border-left: 2px solid #736253;
+  border-right: 2px solid #ffffff;
+  border-bottom: 2px solid #ffffff;
+  transform: translate(1px, 1px);
+  box-shadow: none;
+}
+
+/* Espresso Brown Primary Button */
+.bevel-btn-brown {
+  background: #5a3e2b;
+  border-top: 2px solid #8e684d;
+  border-left: 2px solid #8e684d;
+  border-right: 2px solid #281a10;
+  border-bottom: 2px solid #281a10;
+  box-shadow: 1px 1px 0px #120b06;
+  color: #FAF7F0;
+  transition: all 0.05s ease-in-out;
+}
+
+.bevel-btn-brown:hover {
+  background: #6a4a35;
+}
+
+.bevel-btn-brown:active {
+  border-top: 2px solid #281a10;
+  border-left: 2px solid #281a10;
+  border-right: 2px solid #8e684d;
+  border-bottom: 2px solid #8e684d;
+  transform: translate(1px, 1px);
+  box-shadow: none;
+}
+
+/* Vintage Status Badges */
+.badge-mahfooz {
+  background-color: #e8f3ea;
+  color: #1e5927;
+  border-top: 1px solid #ffffff;
+  border-left: 1px solid #ffffff;
+  border-right: 1px solid #a3c9a8;
+  border-bottom: 1px solid #a3c9a8;
+}
+
+.badge-delivered {
+  background-color: #edebe7;
+  color: #63584e;
+  border-top: 1px solid #ffffff;
+  border-left: 1px solid #ffffff;
+  border-right: 1px solid #b3aba2;
+  border-bottom: 1px solid #b3aba2;
+}
+
+/* Quick Flash Animation on Login (0.3s) */
+@keyframes quick-flash {
+  0% { opacity: 0; filter: brightness(1); }
+  40% { opacity: 0.9; filter: brightness(2.5); background-color: rgba(255, 255, 255, 0.9); }
+  100% { opacity: 0; filter: brightness(1); }
+}
+
+.animate-quick-flash {
+  animation: quick-flash 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+/* Seamless Logo Blend */
+.logo-blend {
+  mix-blend-mode: multiply;
+  filter: contrast(1.08) brightness(0.98);
+}
+
+/* Vintage Scrollbar */
+::-webkit-scrollbar {
+  width: 12px;
+  height: 12px;
+}
+::-webkit-scrollbar-track {
+  background: #EFE7DA;
+  border-left: 1px solid #d5c8b7;
+}
+::-webkit-scrollbar-thumb {
+  background: #dfd5c6;
+  border-top: 2px solid #ffffff;
+  border-left: 2px solid #ffffff;
+  border-right: 2px solid #736253;
+  border-bottom: 2px solid #736253;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #cebfad;
+}
+
+/* =========================================================================
+   CRT STATIC NOISE & TURN-ON FLICKER ANIMATIONS (Analog TV Warmup)
+   ========================================================================= */
+.crt-noise-bg {
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)' opacity='0.7'/%3E%3C/svg%3E");
+  animation: crtNoiseShift 0.12s steps(3) infinite;
+}
+
+@keyframes crtNoiseShift {
+  0% { transform: translate(0, 0); }
+  33% { transform: translate(-4px, 3px); }
+  66% { transform: translate(3px, -3px); }
+  100% { transform: translate(0, 0); }
+}
+
+.crt-turnon-beam {
+  height: 4px;
+  background: #ffffff;
+  box-shadow: 0 0 15px 4px #ffffff, 0 0 40px 10px #ffe2a4, 0 0 80px 20px rgba(255, 200, 100, 0.6);
+  animation: crtBeamExpand 1.5s cubic-bezier(0.2, 0.8, 0.25, 1) forwards;
+}
+
+@keyframes crtBeamExpand {
+  0% {
+    transform: scaleX(0.005) scaleY(1);
+    opacity: 0;
+  }
+  8% {
+    transform: scaleX(1) scaleY(1);
+    opacity: 1;
+  }
+  20% {
+    transform: scaleX(1) scaleY(8);
+    opacity: 0.95;
+  }
+  45% {
+    transform: scaleX(1) scaleY(40);
+    opacity: 0.75;
+  }
+  75% {
+    transform: scaleX(1) scaleY(120);
+    opacity: 0.35;
+  }
+  100% {
+    transform: scaleX(1) scaleY(200);
+    opacity: 0;
+  }
+}
+
+.crt-sync-wave {
+  background: linear-gradient(
+    to bottom,
+    rgba(255, 255, 255, 0) 0%,
+    rgba(255, 245, 220, 0.25) 50%,
+    rgba(255, 255, 255, 0) 100%
+  );
+  animation: crtSyncRoll 0.6s linear infinite;
+}
+
+@keyframes crtSyncRoll {
+  0% { transform: translateY(-100%); }
+  100% { transform: translateY(400%); }
+}
+
+.crt-startup-flicker {
+  background: radial-gradient(circle at 50% 50%, rgba(255, 240, 210, 0.4) 0%, rgba(40, 25, 15, 0.8) 100%);
+  animation: crtFlickerBurst 1.5s ease-out forwards;
+}
+
+@keyframes crtFlickerBurst {
+  0% { opacity: 0.95; }
+  12% { opacity: 0.3; }
+  18% { opacity: 0.85; }
+  25% { opacity: 0.4; }
+  35% { opacity: 0.75; }
+  55% { opacity: 0.3; }
+  75% { opacity: 0.15; }
+  100% { opacity: 0; }
+}
+
+.crt-content-warmup {
+  animation: crtContentReveal 1.6s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+@keyframes crtContentReveal {
+  0% {
+    opacity: 0.1;
+    filter: blur(4px) brightness(0.6) contrast(1.4);
+    transform: scale(0.98);
+  }
+  60% {
+    opacity: 0.4;
+    filter: blur(2px) brightness(0.85);
+    transform: scale(0.995);
+  }
+  85% {
+    opacity: 0.9;
+    filter: blur(0.5px) brightness(1.05);
+    transform: scale(1);
+  }
+  100% {
+    opacity: 1;
+    filter: blur(0px) brightness(1);
+    transform: scale(1);
+  }
+}
+

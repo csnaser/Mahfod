@@ -1,0 +1,6 @@
+{
+  "name": "محفوظ | أمانات الحرم الجامعي",
+  "description": "منصة مفقودات جامعة شقراء بتصميم ريترو عتيق من أواخر التسعينات وبداية الألفينات داخل شاشة لابتوب قديم",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
