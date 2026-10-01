@@ -646,6 +646,67 @@ export default function App() {
     };
   }, [userRole]);
 
+  // 3 Bouncing DVD Logos Effect inside Hero Banner (Contrasting directions, speeds & angles)
+  const heroContainerRef = React.useRef<HTMLDivElement | null>(null);
+  const dvdLogoRef1 = React.useRef<HTMLDivElement | null>(null);
+  const dvdLogoRef2 = React.useRef<HTMLDivElement | null>(null);
+  const dvdLogoRef3 = React.useRef<HTMLDivElement | null>(null);
+
+  useEffect(() => {
+    if (userRole !== 'student') return;
+
+    let animId: number;
+    const particles = [
+      { ref: dvdLogoRef1, x: 20, y: 20, vx: 0.95, vy: 0.65 },
+      { ref: dvdLogoRef2, x: 260, y: 75, vx: -0.85, vy: 0.95 },
+      { ref: dvdLogoRef3, x: 150, y: 30, vx: 0.7, vy: -0.85 },
+    ];
+
+    const updateBounce = () => {
+      const container = heroContainerRef.current;
+      if (container) {
+        const containerRect = container.getBoundingClientRect();
+
+        for (let i = 0; i < particles.length; i++) {
+          const p = particles[i];
+          const logo = p.ref.current;
+          if (!logo) continue;
+
+          const logoWidth = logo.offsetWidth || 120;
+          const logoHeight = logo.offsetHeight || 34;
+
+          const maxX = Math.max(containerRect.width - logoWidth - 8, 10);
+          const maxY = Math.max(containerRect.height - logoHeight - 8, 10);
+
+          p.x += p.vx;
+          p.y += p.vy;
+
+          if (p.x >= maxX) {
+            p.x = maxX;
+            p.vx = -Math.abs(p.vx);
+          } else if (p.x <= 8) {
+            p.x = 8;
+            p.vx = Math.abs(p.vx);
+          }
+
+          if (p.y >= maxY) {
+            p.y = maxY;
+            p.vy = -Math.abs(p.vy);
+          } else if (p.y <= 8) {
+            p.y = 8;
+            p.vy = Math.abs(p.vy);
+          }
+
+          logo.style.transform = `translate3d(${p.x}px, ${p.y}px, 0)`;
+        }
+      }
+      animId = requestAnimationFrame(updateBounce);
+    };
+
+    animId = requestAnimationFrame(updateBounce);
+    return () => cancelAnimationFrame(animId);
+  }, [userRole]);
+
   // Handle Update Status (UPDATE operation in Supabase)
   const handleUpdateStatus = async (item: LostItem) => {
     const newStatus: 'محفوظ بالأمانات' | 'تم التسليم' =
@@ -1568,9 +1629,37 @@ export default function App() {
               - Student View: Free, prominent, unboxed greeting text in center + unified horizontal action bar.
               - Staff View: Shows staff control bar & 4 stats cards for managing inventory. */}
           {userRole === 'student' ? (
-            <div className="py-4 sm:py-6 mb-5 flex flex-col items-center justify-center text-center w-full relative overflow-hidden rounded-2xl">
+            <div
+              ref={heroContainerRef}
+              className="py-4 sm:py-6 mb-5 flex flex-col items-center justify-center text-center w-full relative overflow-hidden rounded-2xl min-h-[160px]"
+            >
               {/* Animated CRT Scanlines Overlay (Thin horizontal repeating lines moving downwards smoothly with subtle opacity) */}
               <div className="crt-animated-scanlines absolute inset-0 pointer-events-none rounded-2xl z-0" />
+
+              {/* 3 Bouncing DVD Logos (Contrasting directions, speeds & angles - Opacity 0.18 to 0.25) */}
+              <div
+                ref={dvdLogoRef1}
+                className="absolute top-0 left-0 pointer-events-none z-0 select-none opacity-[0.22] text-[#4a3222] font-amiri font-bold text-base sm:text-lg border-2 border-[#5a3e2b]/50 bg-[#efe7da]/50 rounded-xl px-3 py-1 whitespace-nowrap will-change-transform flex items-center gap-1.5 shadow-xs"
+              >
+                <ShieldCheck className="w-4 h-4 text-[#5a3e2b]" />
+                <span>مَحْفُوظ</span>
+              </div>
+
+              <div
+                ref={dvdLogoRef2}
+                className="absolute top-0 left-0 pointer-events-none z-0 select-none opacity-[0.20] text-[#3e271b] font-amiri font-bold text-base sm:text-lg border-2 border-[#6d4d38]/50 bg-[#FAF7F0]/50 rounded-xl px-3 py-1 whitespace-nowrap will-change-transform flex items-center gap-1.5 shadow-xs"
+              >
+                <Package className="w-4 h-4 text-[#6d4d38]" />
+                <span>Mahfod</span>
+              </div>
+
+              <div
+                ref={dvdLogoRef3}
+                className="absolute top-0 left-0 pointer-events-none z-0 select-none opacity-[0.24] text-[#5a3e2b] font-amiri font-bold text-base sm:text-lg border-2 border-[#4a3222]/50 bg-[#e8decd]/50 rounded-xl px-3.5 py-1 whitespace-nowrap will-change-transform flex items-center gap-1.5 shadow-xs"
+              >
+                <ShieldCheck className="w-4 h-4 text-[#4a3222]" />
+                <span>مَحْفُوظ • Mahfod</span>
+              </div>
 
               <div className="relative z-10 flex flex-col items-center justify-center text-center w-full">
                 {/* Free, prominent hero greeting without any enclosing box/border */}
